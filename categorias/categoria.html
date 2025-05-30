@@ -1,0 +1,167 @@
+<!DOCTYPE html> 
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>CRUD Categoría</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="../vistas/principal_admin.php">
+        <i class="bi bi-speedometer2"></i> Admin WEB-Minimarket
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="../productos/productos.html"><i class="bi bi-box-seam"></i> Productos</a></li>
+          <li class="nav-item"><a class="nav-link active" aria-current="page" href="../categorias/categoria.html"><i class="bi bi-tags"></i> Categorías</a></li>
+          <li class="nav-item"><a class="nav-link" href="../proveedores/proveedores.html"><i class="bi bi-truck"></i> Proveedores</a></li>
+          <li class="nav-item"><a class="nav-link" href="../clientes/listar.html"><i class="bi bi-people"></i> Clientes</a></li>
+          <li class="nav-item"><a class="nav-link" href="../salir/salir.php"><i class="bi bi-box-arrow-right"></i> Cerrar sesión</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <h1 class="mb-4">CRUD de Categorías</h1>
+
+    <div id="alerta" class="alert d-none" role="alert"></div>
+
+    <!-- Formulario -->
+    <div class="card mb-4 shadow-sm">
+      <div class="card-header bg-secondary text-white">Crear / Actualizar Categoría</div>
+      <div class="card-body">
+        <form id="formCategoria" class="row g-3">
+          <input type="hidden" id="id_categoria" />
+          <div class="col-md-6">
+            <input
+              type="text"
+              id="descripcion"
+              class="form-control"
+              placeholder="Descripción de la categoría"
+              required
+            />
+          </div>
+          <div class="col-md-6">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save2"></i> Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lista de Categorías -->
+    <h3>Lista de Categorías</h3>
+    <div id="categorias" class="row gy-3"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function mostrarAlerta(mensaje, tipo = 'success') {
+      const alerta = document.getElementById('alerta');
+      alerta.textContent = mensaje;
+      alerta.className = `alert alert-${tipo}`;
+      alerta.classList.remove('d-none');
+      setTimeout(() => alerta.classList.add('d-none'), 4000);
+    }
+
+    async function cargarCategorias() {
+      try {
+        const res = await fetch('listar_categoria.php');
+        const data = await res.json();
+        const contenedor = document.getElementById('categorias');
+        contenedor.innerHTML = '';
+        data.forEach(c => {
+          contenedor.innerHTML += `
+            <div class="col-md-4">
+              <div class="card shadow-sm">
+                <div class="card-body">
+                  <strong class="card-title">${c.descripcion}</strong><br>
+                  <button class="btn btn-sm btn-warning me-2" onclick="editar(${c.id_categoria})">
+                    <i class="bi bi-pencil-square"></i> Editar
+                  </button>
+                  <button class="btn btn-sm btn-danger" onclick="eliminar(${c.id_categoria})">
+                    <i class="bi bi-trash"></i> Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      } catch (error) {
+        mostrarAlerta('Error al cargar categorías.', 'danger');
+      }
+    }
+
+    document.getElementById('formCategoria').addEventListener('submit', async e => {
+      e.preventDefault();
+      const id = document.getElementById('id_categoria').value;
+      const datos = new FormData();
+      datos.append('descripcion', document.getElementById('descripcion').value);
+
+      let url = 'crear_categoria.php';
+      let accion = 'creada';
+      if (id) {
+        datos.append('id_categoria', id);
+        url = 'actualizar_categoria.php';
+        accion = 'actualizada';
+      }
+
+      try {
+        const res = await fetch(url, { method: 'POST', body: datos });
+        const texto = await res.text();
+        if (res.ok) {
+          mostrarAlerta(texto);
+          e.target.reset();
+          document.getElementById('id_categoria').value = '';
+          cargarCategorias();
+        } else {
+          mostrarAlerta(texto, 'danger');
+        }
+      } catch (error) {
+        mostrarAlerta('Error al guardar categoría.', 'danger');
+      }
+    });
+
+    async function editar(id) {
+      try {
+        const res = await fetch('obtener_categoria.php?id=' + id);
+        const c = await res.json();
+        document.getElementById('id_categoria').value = c.id_categoria;
+        document.getElementById('descripcion').value = c.descripcion;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch {
+        mostrarAlerta('Error al obtener categoría.', 'danger');
+      }
+    }
+
+    async function eliminar(id) {
+      if (confirm("¿Seguro que quieres eliminar esta categoría?")) {
+        try {
+          const res = await fetch('eliminar_categoria.php?id=' + id);
+          if (res.ok) {
+            mostrarAlerta('Categoría eliminada correctamente.');
+            cargarCategorias();
+          } else {
+            throw new Error();
+          }
+        } catch {
+          mostrarAlerta('Error al eliminar categoría.', 'danger');
+        }
+      }
+    }
+
+    cargarCategorias();
+  </script>
+</body>
+</html>

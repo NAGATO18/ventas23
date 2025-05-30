@@ -1,0 +1,58 @@
+/* Centrado y fondo suave */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Títulos y subtítulos */
+h2, h4 {
+    color: #343a40;
+    font-weight: 600;
+}
+
+/* Tablas más suaves */
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.table thead th {
+    background-color: #e9ecef;
+}
+
+/* Botones */
+.btn-primary {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Select y campos */
+.form-select, .form-control {
+    border-radius: 0.5rem;
+}
+
+/* Animación al agregar */
+.alert {
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

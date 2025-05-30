@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>CRUD Proveedores</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    .form-control {
+      max-width: 400px;
+    }
+    .proveedor {
+      border: 1px solid #dee2e6;
+      border-radius: 0.5rem;
+      background-color: #ffffff;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+    .alerta {
+      display: none;
+    }
+    .alerta.success {
+      display: block;
+    }
+    .alerta.error {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de navegación igual a principal_admin.php -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold" href="../vistas/principal_admin.php">
+        <i class="bi bi-truck"></i> Admin Proveedores
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarProveedores" aria-controls="navbarProveedores" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarProveedores">
+        <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="../productos/productos.html">
+              <i class="bi bi-box-seam"></i> Productos
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../categorias/categoria.html">
+              <i class="bi bi-tags"></i> Categorías
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">
+              <i class="bi bi-truck"></i> Proveedores
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../clientes/listar.html">
+              <i class="bi bi-people"></i> Clientes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link text-danger" href="../salir/salir.php">
+              <i class="bi bi-box-arrow-right"></i> Cerrar sesión
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container my-4">
+    <h1 class="mb-4" style="color: #000;"><i class="bi bi-truck"></i> CRUD de Proveedores</h1>
+
+    <div id="alerta" class="alerta alert" role="alert"></div>
+
+    <div class="card mb-4">
+      <div class="card-header text-white" style="background-color: #000;">
+        Crear / Actualizar Proveedor
+      </div>
+      <div class="card-body">
+        <form id="formProveedor" class="row g-3">
+          <input type="hidden" id="id_proveedor" />
+          <div class="col-md-4">
+            <input type="text" id="razonsocial" class="form-control" placeholder="Razón Social" required />
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="direccion" class="form-control" placeholder="Dirección" required />
+          </div>
+          <div class="col-md-4">
+            <input type="text" id="telefono" class="form-control" placeholder="Teléfono" required />
+          </div>
+          <div class="col-12 text-end">
+            <button type="submit" class="btn btn-success">
+              <i class="bi bi-save2"></i> Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <h3 class="mb-3 text-secondary">Lista de Proveedores</h3>
+    <div id="proveedores" class="row"></div>
+  </div>
+
+  <script>
+    function mostrarAlerta(mensaje, tipo = 'success') {
+      const alerta = document.getElementById('alerta');
+      alerta.textContent = mensaje;
+      alerta.className = `alerta alert alert-${tipo}`;
+      alerta.style.display = 'block';
+      setTimeout(() => alerta.style.display = 'none', 3000);
+    }
+
+    async function cargarProveedores() {
+      try {
+        const res = await fetch('listar_proveedor.php');
+        const data = await res.json();
+        const contenedor = document.getElementById('proveedores');
+        contenedor.innerHTML = '';
+        data.forEach(p => {
+          contenedor.innerHTML += `
+            <div class="col-md-4">
+              <div class="proveedor shadow-sm">
+                <h5 class="fw-bold">${p.razonsocial}</h5>
+                <p class="mb-1"><i class="bi bi-geo-alt"></i> ${p.direccion}</p>
+                <p class="mb-2"><i class="bi bi-telephone"></i> ${p.telefono}</p>
+                <div class="d-flex justify-content-between">
+                  <button class="btn btn-outline-primary btn-sm" onclick="editar(${p.id_proveedor})">
+                    <i class="bi bi-pencil-square"></i> Editar
+                  </button>
+                  <button class="btn btn-outline-danger btn-sm" onclick="eliminar(${p.id_proveedor})">
+                    <i class="bi bi-trash"></i> Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      } catch (error) {
+        mostrarAlerta('Error al cargar proveedores.', 'danger');
+      }
+    }
+
+    document.getElementById('formProveedor').addEventListener('submit', async e => {
+      e.preventDefault();
+
+      const telefono = document.getElementById('telefono').value.trim();
+      const soloNumeros = /^[0-9]+$/;
+
+      if (!soloNumeros.test(telefono)) {
+        mostrarAlerta('No se permiten letras en el teléfono.', 'danger');
+        return;
+      }
+
+      const id = document.getElementById('id_proveedor').value;
+      const datos = new FormData();
+      datos.append('razonsocial', document.getElementById('razonsocial').value);
+      datos.append('direccion', document.getElementById('direccion').value);
+      datos.append('telefono', telefono);
+
+      let url = 'crear_proveedor.php';
+      let accion = 'creado';
+      if (id) {
+        datos.append('id_proveedor', id);
+        url = 'actualizar_proveedor.php';
+        accion = 'actualizado';
+      }
+
+      try {
+        const res = await fetch(url, { method: 'POST', body: datos });
+        if (res.ok) {
+          mostrarAlerta(`Proveedor ${accion} correctamente.`, 'success');
+          e.target.reset();
+          document.getElementById('id_proveedor').value = '';
+          cargarProveedores();
+        } else {
+          throw new Error();
+        }
+      } catch (error) {
+        mostrarAlerta('Error al guardar proveedor.', 'danger');
+      }
+    });
+
+    async function editar(id) {
+      try {
+        const res = await fetch('obtener_proveedor.php?id=' + id);
+        const p = await res.json();
+        document.getElementById('id_proveedor').value = p.id_proveedor;
+        document.getElementById('razonsocial').value = p.razonsocial;
+        document.getElementById('direccion').value = p.direccion;
+        document.getElementById('telefono').value = p.telefono;
+      } catch {
+        mostrarAlerta('Error al obtener proveedor.', 'danger');
+      }
+    }
+
+    async function eliminar(id) {
+      if (confirm("¿Seguro que quieres eliminar este proveedor?")) {
+        try {
+          const res = await fetch('eliminar_proveedor.php?id=' + id);
+          if (res.ok) {
+            mostrarAlerta('Proveedor eliminado correctamente.', 'success');
+            cargarProveedores();
+          } else {
+            throw new Error();
+          }
+        } catch {
+          mostrarAlerta('Error al eliminar proveedor.', 'danger');
+        }
+      }
+    }
+
+    cargarProveedores();
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
